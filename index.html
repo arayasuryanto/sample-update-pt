@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #495057;
+        }
+
+        /* Header */
+        .header {
+            background-color: #aa0000;
+            color: white;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .logo-image {
+            height: 45px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .menu-toggle {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 8px 12px;
+            transition: transform 0.3s ease;
+        }
+
+        .menu-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        .menu-toggle.collapsed {
+            transform: rotate(180deg);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-item {
+            background-color: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .header-item:hover {
+            background-color: rgba(255,255,255,0.2);
+        }
+
+        /* Apps Dropdown */
+        .apps-dropdown {
+            position: absolute;
+            top: 70px;
+            right: 20px;
+            width: 500px;
+            max-height: 600px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            display: none;
+            z-index: 1001;
+            overflow-y: auto;
+        }
+
+        .apps-dropdown.active {
+            display: block;
+        }
+
+        .apps-dropdown-header {
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .apps-dropdown-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #343a40;
+            margin: 0;
+        }
+
+        .apps-dropdown-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            padding: 20px;
+        }
+
+        .apps-dropdown-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.2s;
+            border: 1px solid #e9ecef;
+        }
+
+        .apps-dropdown-item:hover {
+            background-color: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .apps-dropdown-icon {
+            font-size: 40px;
+        }
+
+        .apps-dropdown-label {
+            font-size: 13px;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 70px;
+            width: 250px;
+            height: calc(100vh - 70px);
+            background-color: #ffffff;
+            color: #495057;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 20px 0;
+            border-right: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar.collapsed {
+            width: 70px;
+        }
+
+        .sidebar.collapsed .menu-title {
+            display: none;
+        }
+
+        .sidebar.collapsed .menu-item span {
+            opacity: 0;
+            visibility: hidden;
+            width: 0;
+            position: absolute;
+        }
+
+        .sidebar.collapsed .menu-item.has-arrow::after {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .sidebar.collapsed .menu-item {
+            justify-content: center;
+            padding: 14px 0;
+            gap: 0;
+            position: relative;
+            text-align: center;
+        }
+
+        .sidebar.collapsed .menu-item i {
+            width: auto;
+            margin: 0;
+            display: inline-block;
+        }
+
+        .sidebar.collapsed .submenu {
+            display: none !important;
+        }
+
+        .sidebar.collapsed .menu-item.active {
+            border-right: 3px solid #aa0000;
+        }
+
+        /* Fix centering for menu items inside divs */
+        .sidebar.collapsed > div {
+            display: contents;
+        }
+
+        .sidebar.collapsed .menu-item::before {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 70px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: #2a3042;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            pointer-events: none;
+            z-index: 1001;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .sidebar.collapsed .menu-item:hover::before {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .menu-title {
+            padding: 10px 20px;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #6c757d;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: #495057;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .menu-item span {
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .menu-item:hover {
+            background-color: rgba(170, 0, 0, 0.05);
+            color: #aa0000;
+        }
+
+        .menu-item.active {
+            background-color: rgba(170, 0, 0, 0.1);
+            color: #aa0000;
+            border-right: 3px solid #aa0000;
+            font-weight: 500;
+        }
+
+        .menu-item i {
+            width: 20px;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .menu-item.has-arrow::after {
+            content: '\f105';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            margin-left: auto;
+            transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+        }
+
+        .menu-item.has-arrow:hover::after {
+            transform: translateX(3px);
+        }
+
+        .menu-item.has-arrow.expanded::after {
+            transform: rotate(90deg);
+        }
+
+        /* Submenu */
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+
+        .submenu.expanded {
+            max-height: 500px;
+        }
+
+        .submenu-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px 10px 52px;
+            color: #6c757d;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .submenu-item:hover {
+            background-color: rgba(170, 0, 0, 0.05);
+            color: #aa0000;
+            padding-left: 56px;
+        }
+
+        .submenu-item.active {
+            color: #aa0000;
+            font-weight: 500;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 250px;
+            margin-top: 70px;
+            padding: 24px;
+            height: calc(100vh - 70px);
+            transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .main-content.expanded {
+            margin-left: 70px;
+        }
+
+        .page-header {
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, #aa0000 0%, #d32f2f 100%);
+            border-radius: 12px;
+            padding: 32px 40px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(170, 0, 0, 0.2);
+            flex-shrink: 0;
+        }
+
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .page-header::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -5%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-date {
+            font-size: 14px;
+            font-weight: 400;
+            opacity: 0.95;
+            margin-bottom: 8px;
+            letter-spacing: 0.3px;
+        }
+
+        .page-title {
+            font-size: 32px;
+            font-weight: 600;
+            color: white;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .breadcrumb {
+            display: flex;
+            gap: 8px;
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .breadcrumb-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .breadcrumb-item::after {
+            content: '/';
+            color: #dee2e6;
+        }
+
+        .breadcrumb-item:last-child::after {
+            content: '';
+        }
+
+        .breadcrumb-item.active {
+            color: #495057;
+        }
+
+        /* Card */
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 30px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            height: 100%;
+            align-content: start;
+        }
+
+        .dashboard-item {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px 15px;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            min-height: 0;
+        }
+
+        .dashboard-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .dashboard-icon {
+            font-size: 60px;
+        }
+
+        .dashboard-label {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Icon Colors */
+        .icon-red { color: #aa0000; }
+        .icon-green { color: #539C61; }
+        .icon-blue { color: #008FD7; }
+        .icon-orange { color: #F08519; }
+        .icon-teal { color: #56AAB7; }
+        .icon-teal-dark { color: #4B8D7F; }
+        .icon-navy { color: #566892; }
+        .icon-purple { color: #A878B1; }
+        .icon-dark { color: #50585D; }
+
+        /* Footer */
+        .footer {
+            padding: 16px 0;
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #6c757d;
+            background-color: transparent;
+            border-top: 1px solid #e9ecef;
+            flex-shrink: 0;
+            margin-top: auto;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+                z-index: 999;
+            }
+
+            .main-content {
+                margin-left: 0 !important;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+
+            .page-header {
+                padding: 24px;
+            }
+
+            .page-title {
+                font-size: 24px;
+            }
+
+            .header-date {
+                font-size: 13px;
+            }
+
+            .dashboard-icon {
+                font-size: 50px;
+            }
+
+            .main-content {
+                height: auto;
+                min-height: calc(100vh - 70px);
+            }
+
+            .apps-dropdown {
+                right: 10px;
+                width: calc(100vw - 20px);
+                max-width: 400px;
+            }
+
+            .apps-dropdown-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header-item span {
+                display: none;
+            }
+
+            .page-header {
+                padding: 20px;
+            }
+
+            .page-title {
+                font-size: 20px;
+            }
+
+            .header-date {
+                font-size: 12px;
+            }
+
+            .dashboard-icon {
+                font-size: 45px;
+            }
+
+            .main-content {
+                height: auto;
+                min-height: calc(100vh - 70px);
+            }
+
+            .apps-dropdown {
+                right: 5px;
+                width: calc(100vw - 10px);
+            }
+
+            .apps-dropdown-icon {
+                font-size: 35px;
+            }
+        }
+
+        /* Mobile overlay */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 70px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 998;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()">
+                <i class="fas fa-indent"></i>
+            </button>
+            <a href="#" class="logo">
+                <img src="dashboard-logo1.png" alt="Dashboard Logo" class="logo-image">
+            </a>
+        </div>
+        <div class="header-right">
+            <button class="header-item">
+                <i class="far fa-moon"></i>
+            </button>
+            <button class="header-item" id="appsMenuBtn" onclick="toggleAppsDropdown()">
+                <i class="fas fa-th"></i>
+            </button>
+            <button class="header-item">
+                <span>Araya Putra Suryanto</span>
+                <i class="fas fa-chevron-down"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Apps Dropdown -->
+    <div class="apps-dropdown" id="appsDropdown">
+        <div class="apps-dropdown-header">
+            <h3 class="apps-dropdown-title">Applications</h3>
+        </div>
+        <div class="apps-dropdown-grid">
+            <!-- CRM -->
+            <a href="#" class="apps-dropdown-item">
+                <div class="apps-dropdown-icon icon-red">
+                    <i class="fas fa-search"></i>
+                    <i class="fas fa-user" style="font-size: 20px; position: relative; top: -10px; left: -8px;"></i>
+                </div>
+                <div class="apps-dropdown-label icon-red">CRM</div>
+            </a>
+
+            <!-- Status Produksi -->
+            <a href="#" class="apps-dropdown-item">
+                <div class="apps-dropdown-icon icon-green">
+                    <i class="fas fa-clipboard-check"></i>
+                </div>
+                <div class="apps-dropdown-label icon-green">Status Produksi</div>
+            </a>
+
+            <!-- PL -->
+            <a href="#" class="apps-dropdown-item">
+                <div class="apps-dropdown-icon icon-blue">
+                    <i class="fas fa-folder-open"></i>
+                </div>
+                <div class="apps-dropdown-label icon-blue">PL</div>
+            </a>
+
+            <!-- Project -->
+            <a href="#" class="apps-dropdown-item">
+                <div class="apps-dropdown-icon icon-orange">
+                    <i class="fas fa-folder"></i>
+                    <i class="fas fa-cog" style="font-size: 16px; position: relative; top: -8px; left: 6px;"></i>
+                </div>
+                <div class="apps-dropdown-label icon-orange">Project</div>
+            </a>
+
+            <!-- HRD -->
+            <a href="#" class="apps-dropdown-item">
+                <div class="apps-dropdown-icon icon-teal">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="apps-dropdown-label icon-teal">HRD</div>
+            </a>
+
+            <!-- Finance -->
+            <a href="#" class="apps-dropdown-item">
+                <div class="apps-dropdown-icon icon-teal-dark">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <div class="apps-dropdown-label icon-teal-dark">Finance</div>
+            </a>
+
+            <!-- Warehouse -->
+            <a href="#" class="apps-dropdown-item">
+                <div class="apps-dropdown-icon icon-navy">
+                    <i class="fas fa-warehouse"></i>
+                </div>
+                <div class="apps-dropdown-label icon-navy">Warehouse</div>
+            </a>
+
+            <!-- MS -->
+            <a href="#" class="apps-dropdown-item">
+                <div class="apps-dropdown-icon icon-purple">
+                    <i class="fas fa-handshake"></i>
+                </div>
+                <div class="apps-dropdown-label icon-purple">MS</div>
+            </a>
+
+            <!-- Business Intelligence -->
+            <a href="#" class="apps-dropdown-item">
+                <div class="apps-dropdown-icon icon-dark">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <div class="apps-dropdown-label icon-dark">Business Intelligence</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Sidebar Overlay (for mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <a href="#" class="menu-item active" data-tooltip="Home">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+
+        <!-- SOP Menu with Dropdown -->
+        <div>
+            <a href="javascript:void(0);" class="menu-item has-arrow" data-tooltip="SOP" onclick="toggleSubmenu(event, 'sopSubmenu')">
+                <i class="fas fa-clipboard-list"></i>
+                <span>SOP</span>
+            </a>
+            <div class="submenu" id="sopSubmenu">
+                <a href="#" class="submenu-item">All</a>
+                <a href="#" class="submenu-item">Tambah</a>
+                <a href="#" class="submenu-item">Highlight</a>
+            </div>
+        </div>
+
+        <!-- Memo Menu with Dropdown -->
+        <div>
+            <a href="javascript:void(0);" class="menu-item has-arrow" data-tooltip="Memo" onclick="toggleSubmenu(event, 'memoSubmenu')">
+                <i class="fas fa-file-alt"></i>
+                <span>Memo</span>
+            </a>
+            <div class="submenu" id="memoSubmenu">
+                <a href="#" class="submenu-item">Daftar Memo</a>
+                <a href="#" class="submenu-item">Tambah Memo</a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="page-header">
+            <div class="header-content">
+                <div class="header-date" id="current-date">Jumat, 26 Desember 2025</div>
+                <h1 class="page-title" id="greeting-title">Selamat Datang, Araya!</h1>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="dashboard-grid">
+                <!-- CRM -->
+                <a href="#" class="dashboard-item">
+                    <div class="dashboard-icon icon-red">
+                        <i class="fas fa-search"></i>
+                        <i class="fas fa-user" style="font-size: 30px; position: relative; top: -15px; left: -12px;"></i>
+                    </div>
+                    <div class="dashboard-label icon-red">CRM</div>
+                </a>
+
+                <!-- Status Produksi -->
+                <a href="#" class="dashboard-item">
+                    <div class="dashboard-icon icon-green">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <div class="dashboard-label icon-green">Status Produksi</div>
+                </a>
+
+                <!-- PL -->
+                <a href="#" class="dashboard-item">
+                    <div class="dashboard-icon icon-blue">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                    <div class="dashboard-label icon-blue">PL</div>
+                </a>
+
+                <!-- Project -->
+                <a href="#" class="dashboard-item">
+                    <div class="dashboard-icon icon-orange">
+                        <i class="fas fa-folder"></i>
+                        <i class="fas fa-cog" style="font-size: 22px; position: relative; top: -12px; left: 8px;"></i>
+                    </div>
+                    <div class="dashboard-label icon-orange">Project</div>
+                </a>
+
+                <!-- HRD -->
+                <a href="#" class="dashboard-item">
+                    <div class="dashboard-icon icon-teal">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="dashboard-label icon-teal">HRD</div>
+                </a>
+
+                <!-- Finance -->
+                <a href="#" class="dashboard-item">
+                    <div class="dashboard-icon icon-teal-dark">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div class="dashboard-label icon-teal-dark">Finance</div>
+                </a>
+
+                <!-- Warehouse -->
+                <a href="#" class="dashboard-item">
+                    <div class="dashboard-icon icon-navy">
+                        <i class="fas fa-warehouse"></i>
+                    </div>
+                    <div class="dashboard-label icon-navy">Warehouse</div>
+                </a>
+
+                <!-- MS -->
+                <a href="#" class="dashboard-item">
+                    <div class="dashboard-icon icon-purple">
+                        <i class="fas fa-handshake"></i>
+                    </div>
+                    <div class="dashboard-label icon-purple">MS</div>
+                </a>
+
+                <!-- Business Intelligence -->
+                <a href="#" class="dashboard-item">
+                    <div class="dashboard-icon icon-dark">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <div class="dashboard-label icon-dark">Business Intelligence</div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div>2026 © Fabrik Group.</div>
+            <div>Design & Develop by Digital360</div>
+        </footer>
+    </main>
+
+    <script>
+        // Wait for DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Update time
+            function updateTime() {
+                const now = new Date();
+                const timeElement = document.getElementById('current-time');
+                if (timeElement) {
+                    timeElement.textContent = now.toString();
+                }
+            }
+
+            setInterval(updateTime, 1000);
+            updateTime();
+
+            // Update date in Indonesian format
+            function updateDate() {
+                const now = new Date();
+                const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+                const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                              'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+                const dayName = days[now.getDay()];
+                const day = now.getDate();
+                const monthName = months[now.getMonth()];
+                const year = now.getFullYear();
+
+                const dateString = `${dayName}, ${day} ${monthName} ${year}`;
+                document.getElementById('current-date').textContent = dateString;
+            }
+
+            updateDate();
+
+        // Dynamic greeting based on time
+        function updateGreeting() {
+            const now = new Date();
+            const hour = now.getHours();
+            const userName = "Araya";
+            let greeting = "";
+
+            // Time-based greetings with variations
+            const morningGreetings = [
+                "Selamat Pagi",
+                "Siap Memulai Hari",
+                "Semangat Pagi",
+                "Pagi yang Produktif"
+            ];
+
+            const afternoonGreetings = [
+                "Selamat Siang",
+                "Tetap Semangat",
+                "Lanjutkan Perjuangan",
+                "Siang yang Produktif"
+            ];
+
+            const eveningGreetings = [
+                "Selamat Sore",
+                "Hampir Selesai",
+                "Sore yang Menyenangkan",
+                "Tetap Fokus"
+            ];
+
+            const nightGreetings = [
+                "Selamat Malam",
+                "Istirahat yang Cukup",
+                "Malam yang Tenang",
+                "Waktunya Bersantai"
+            ];
+
+            const motivationalGreetings = [
+                "Siap Menjadi Yang Terbaik",
+                "Luar Biasa Hari Ini",
+                "Tetap Produktif",
+                "Raih Kesuksesan",
+                "Buat Hari Ini Berarti",
+                "Kamu Bisa Melakukannya"
+            ];
+
+            // Determine time period
+            let greetingPool = [];
+
+            if (hour >= 5 && hour < 11) {
+                // Morning (5 AM - 11 AM)
+                greetingPool = [...morningGreetings, ...motivationalGreetings];
+            } else if (hour >= 11 && hour < 15) {
+                // Afternoon (11 AM - 3 PM)
+                greetingPool = [...afternoonGreetings, ...motivationalGreetings];
+            } else if (hour >= 15 && hour < 18) {
+                // Evening (3 PM - 6 PM)
+                greetingPool = [...eveningGreetings, ...motivationalGreetings];
+            } else {
+                // Night (6 PM - 5 AM)
+                greetingPool = [...nightGreetings, ...motivationalGreetings];
+            }
+
+            // Select random greeting from the pool
+            const randomIndex = Math.floor(Math.random() * greetingPool.length);
+            greeting = greetingPool[randomIndex];
+
+            // Update the page title
+            const pageTitleElement = document.querySelector('.page-title');
+            if (pageTitleElement) {
+                pageTitleElement.textContent = `${greeting}, ${userName}!`;
+            }
+        }
+
+        // Update greeting on page load
+        updateGreeting();
+
+        // Toggle apps dropdown
+        window.toggleAppsDropdown = function() {
+            const dropdown = document.getElementById('appsDropdown');
+            dropdown.classList.toggle('active');
+        };
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('appsDropdown');
+            const appsBtn = document.getElementById('appsMenuBtn');
+
+            if (!dropdown.contains(event.target) && !appsBtn.contains(event.target)) {
+                dropdown.classList.remove('active');
+            }
+        });
+
+        // Toggle sidebar collapse/expand
+        window.toggleSidebar = function() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.querySelector('.main-content');
+            const toggleBtn = document.getElementById('menuToggle');
+            const toggleIcon = toggleBtn.querySelector('i');
+            const overlay = document.getElementById('sidebarOverlay');
+            const isMobile = window.innerWidth <= 768;
+
+            if (isMobile) {
+                // Mobile behavior - slide in/out
+                sidebar.classList.toggle('mobile-open');
+                overlay.classList.toggle('active');
+            } else {
+                // Desktop behavior - collapse/expand
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+
+                // Toggle icon between indent and outdent
+                if (sidebar.classList.contains('collapsed')) {
+                    toggleIcon.className = 'fas fa-outdent';
+                    // Close all submenus when collapsing
+                    const allSubmenus = document.querySelectorAll('.submenu');
+                    const allMenuItems = document.querySelectorAll('.menu-item.has-arrow');
+                    allSubmenus.forEach(submenu => submenu.classList.remove('expanded'));
+                    allMenuItems.forEach(item => item.classList.remove('expanded'));
+                } else {
+                    toggleIcon.className = 'fas fa-indent';
+                }
+            }
+        };
+
+        // Toggle submenu dropdown
+        window.toggleSubmenu = function(event, submenuId) {
+            event.preventDefault();
+            const sidebar = document.getElementById('sidebar');
+
+            // Don't open submenu if sidebar is collapsed
+            if (sidebar.classList.contains('collapsed')) {
+                return;
+            }
+
+            const submenu = document.getElementById(submenuId);
+            const menuItem = event.currentTarget;
+
+            // Close other submenus
+            const allSubmenus = document.querySelectorAll('.submenu');
+            const allMenuItems = document.querySelectorAll('.menu-item.has-arrow');
+
+            allSubmenus.forEach(item => {
+                if (item !== submenu) {
+                    item.classList.remove('expanded');
+                }
+            });
+
+            allMenuItems.forEach(item => {
+                if (item !== menuItem) {
+                    item.classList.remove('expanded');
+                }
+            });
+
+            // Toggle current submenu
+            submenu.classList.toggle('expanded');
+            menuItem.classList.toggle('expanded');
+        };
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.querySelector('.main-content');
+            const overlay = document.getElementById('sidebarOverlay');
+            const toggleBtn = document.getElementById('menuToggle');
+            const toggleIcon = toggleBtn.querySelector('i');
+            const isMobile = window.innerWidth <= 768;
+
+            if (!isMobile) {
+                // Clear mobile classes when switching to desktop
+                sidebar.classList.remove('mobile-open');
+                overlay.classList.remove('active');
+            } else {
+                // Clear desktop classes when switching to mobile
+                sidebar.classList.remove('collapsed');
+                mainContent.classList.remove('expanded');
+                toggleIcon.className = 'fas fa-indent';
+
+                // Close all submenus on mobile
+                const allSubmenus = document.querySelectorAll('.submenu');
+                const allMenuItems = document.querySelectorAll('.menu-item.has-arrow');
+                allSubmenus.forEach(submenu => submenu.classList.remove('expanded'));
+                allMenuItems.forEach(item => item.classList.remove('expanded'));
+            }
+        });
+    }); // Close DOMContentLoaded event listener
+    </script>
+</body>
+</html>
